@@ -1,6 +1,8 @@
 {
-    "author": "Nate Scribano",
-    "dependencies": {},
+    "author": "Nathan Scribano",
+    "dependencies": {
+        "pebble-clay": "^1.0.0"
+    },
     "keywords": [],
     "name": "top",
     "pebble": {
@@ -8,19 +10,13 @@
             "configurable"
         ],
         "displayName": "Twenty One Pilots",
-        "enableMultiJS": false,
-        "messageKeys": {
-            "KEY_LYRICS": 0
-        },
+        "enableMultiJS": true,
+        "messageKeys": [
+            "Lyrics"
+        ],
         "projectType": "native",
         "resources": {
             "media": [
-                {
-                    "file": "images/TOP_BW_Dither.png",
-                    "name": "TOP_LOGO_DITHER",
-                    "targetPlatforms": null,
-                    "type": "bitmap"
-                },
                 {
                     "file": "images/Twenty_One_Pilots_menu_image.png",
                     "menuIcon": true,
@@ -33,6 +29,12 @@
                     "name": "TOP_LOGO",
                     "targetPlatforms": null,
                     "type": "bitmap"
+                },
+                {
+                    "file": "images/TOP_BW_Dither.png",
+                    "name": "TOP_LOGO_DITHER",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
                 }
             ]
         },
@@ -42,9 +44,9 @@
             "basalt",
             "chalk"
         ],
-        "uuid": "324b7308-2a1d-4eb6-982b-34dbe80936d5",
+        "uuid": "333a93fa-dc4b-468b-9947-25436b861db9",
         "watchapp": {
-            "watchface": true
+            "watchface": false
         }
     },
     "version": "1.21.0"

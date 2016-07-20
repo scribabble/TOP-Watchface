@@ -1,5 +1,8 @@
 #include <pebble.h>
-#define KEY_LYRICS 0
+#include "main.h"
+#include "lyrics.h"
+
+ClaySettings settings;
 
 static Window *s_main_window;
 
@@ -12,108 +15,52 @@ static TextLayer *s_date_layer;
 static TextLayer *s_dayOfWeek_layer;
 static TextLayer *s_lyrics_layer;
 
-int dayOfYear = 0;        // needed to choose lyrics
+int dayOfYear = 0;		// needed to choose lyrics
 
-static void chooseLyrics ()
+// Initialize the default settings
+static void default_settings()
 {
-    dayOfYear = dayOfYear % 21;    // <--number based on number of lyrics in system    (the last case + 1)
-    
-    switch (dayOfYear)
-    {
-        default:
-            text_layer_set_text(s_lyrics_layer, "Sometimes to stay alive, you've gotta kill your mind");
-            break;
-        case 1:
-            text_layer_set_text(s_lyrics_layer, "Sometimes quiet is violent");
-            break;
-        case 2:
-            text_layer_set_text(s_lyrics_layer, "But you specialize in dying, You hear me screaming Father");
-            break;
-        case 3:
-            text_layer_set_text(s_lyrics_layer, "Faith is to be awake, and to be awake is for us to think");
-            break;
-        case 4:
-            text_layer_set_text(s_lyrics_layer, "Somebody stole my car radio and now I just sit in silence");
-            break;
-        case 5:
-            text_layer_set_text(s_lyrics_layer, "My lungs will fill and then deflate. They fill with fire, exhale desire.");
-            break;
-        case 6:
-            text_layer_set_text(s_lyrics_layer, "Stay alive");
-            break;
-        case 7:
-            text_layer_set_text(s_lyrics_layer, "We're broken people");
-            break;
-        case 8:
-            text_layer_set_text(s_lyrics_layer, "I'll put you on the map, I'll cure you of disease");
-            break;
-        case 9:
-            text_layer_set_text(s_lyrics_layer, "Some see a pen, I see a harpoon");
-            break;
-        case 10:
-            text_layer_set_text(s_lyrics_layer, "I don't want to be heard. I want to be listened to");
-            break;
-        case 11:
-            text_layer_set_text(s_lyrics_layer, "Power to the local dreamer");
-            break;
-        case 12:
-            text_layer_set_text(s_lyrics_layer, "Peace will win and fear will lose");
-            break;
-        case 13:
-            text_layer_set_text(s_lyrics_layer, "I'm forced to deal with what I feel. There's no distraction to mask what is real.");
-            break;
-        case 14:
-            text_layer_set_text(s_lyrics_layer, "And once again, I will be on a march to the sea");
-            break;
-        case 15:
-            text_layer_set_text(s_lyrics_layer, "The sun will rise and we will try again");
-            break;
-        case 16:
-            text_layer_set_text(s_lyrics_layer, "I'll stay awake, because the dark's not taking prisoners tonight");
-            break;
-        case 17:
-            text_layer_set_text(s_lyrics_layer, "He is waiting, oh so patiently, while we repeat the same routine as we will please comfortability");
-            break;
-        case 18:
-            text_layer_set_text(s_lyrics_layer, "And I'm lying here just crying, so wash me with your water");
-            break;
-        case 19:
-            text_layer_set_text(s_lyrics_layer, "I know my soul's freezing. Hell's hot for good reason");
-            break;
-        case 20:
-            text_layer_set_text(s_lyrics_layer, "You're the judge, oh no, set me free");
-            break;
-        /*case 21:
-            text_layer_set_text(s_lyrics_layer, "I'm a goner. Somebody catch my breath.");
-            break;
-        case 22:
-            text_layer_set_text(s_lyrics_layer, "It ain't the speakers that bump hearts, it's our hearts that make the beat");
-            break;
-        case 23:
-            text_layer_set_text(s_lyrics_layer, "Where we're from, we're no one, Our hometown's in the dark");
-            break;
-        case 24:
-            text_layer_set_text(s_lyrics_layer, "Am I the only one I know, waging my wars behind my face and above my throat?");
-            break;
-        case 25:
-            text_layer_set_text(s_lyrics_layer, "No one looks up anymore, cause you might get a raindrop in your eye");
-            break;
-        case 26:
-            text_layer_set_text(s_lyrics_layer, "I've been thinking too much");
-            break;
-        case 27:
-            text_layer_set_text(s_lyrics_layer, "My name is Blurryface and I care what you think");
-            break;
-        case 28:
-            text_layer_set_text(s_lyrics_layer, "Our brains are sick, but that's okay");
-            break;
-        case 29:
-            text_layer_set_text(s_lyrics_layer, "Domingo en fuego, I think I lost my halo");
-            break;
-        case 30:
-            text_layer_set_text(s_lyrics_layer, "You would do almost anything just to feel free");
-            break;*/
+	settings.Lyrics = false;
+}
+
+// Read settings from persistent storage
+static void load_settings()
+{
+	default_settings();
+	persist_read_data(SETTINGS_KEY, &settings, sizeof(settings));
+}
+
+// Save settings to persistent storage
+static void save_settings()
+{
+	persist_write_data(SETTINGS_KEY, &settings, sizeof(settings));
+	update_display();
+}
+
+// Update the display elements
+static void update_display()
+{
+	if (settings.Lyrics) {  // Show lyrics
+        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
+        layer_set_hidden(text_layer_get_layer(s_lyrics_layer), false);
     }
+    else {  // Hide lyrics
+        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap); // change back to s_background_bitmap_dithered?
+        layer_set_hidden(text_layer_get_layer(s_lyrics_layer), true);
+    }
+}
+
+static void in_recv_handler(DictionaryIterator *iterator, void *context)
+{
+  	// Get Tuple
+  	Tuple *lyrics_t = dict_find(iterator, MESSAGE_KEY_Lyrics);
+	if (lyrics_t)
+	{
+		settings.Lyrics = lyrics_t->value->int32 == 1;	
+	}
+	
+	// Save the new settings to persistent storage
+	save_settings();
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) 
@@ -162,15 +109,16 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
         text_layer_set_text(s_date_layer, dateBuffer);
         text_layer_set_text(s_dayOfWeek_layer, dayOfWeekBuffer);
         
-        chooseLyrics();
+        chooseLyrics(s_lyrics_layer, dayOfYear);
     }
 }
 
 
 static void main_window_load (Window *window)
 {
-    bool lyrics = persist_read_bool(KEY_LYRICS);
-    
+	// TODO: REMOVE THIS
+	bool lyrics = true;
+	
     s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_TOP_LOGO);
     s_background_bitmap_dithered = gbitmap_create_with_resource(RESOURCE_ID_TOP_LOGO_DITHER);
     s_background_layer = PBL_IF_RECT_ELSE(bitmap_layer_create(GRect(0, 0, 144, 168)),bitmap_layer_create(GRect(0, 7, 144, 168)));
@@ -203,18 +151,20 @@ static void main_window_load (Window *window)
     text_layer_set_text_alignment(s_lyrics_layer, GTextAlignmentCenter);
     layer_add_child(window_get_root_layer(window),text_layer_get_layer(s_lyrics_layer));
     text_layer_enable_screen_text_flow_and_paging(s_lyrics_layer, 1);
-    if (lyrics) {  // Show lyrics
+    /*if (lyrics) {  // Show lyrics
         bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
         layer_set_hidden(text_layer_get_layer(s_lyrics_layer), false);
     }
     else {  // Hide lyrics
         bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap); // change back to s_background_bitmap_dithered?
         layer_set_hidden(text_layer_get_layer(s_lyrics_layer), true);
-    }
+    }*/
         
     // Load time when window is loaded
     time_t now = time(NULL); 
     tick_handler(localtime(&now),MINUTE_UNIT | DAY_UNIT);
+	
+	update_display();
 }
 
 static void main_window_unload (Window *window)
@@ -229,37 +179,10 @@ static void main_window_unload (Window *window)
     text_layer_destroy (s_lyrics_layer);
 }
 
-static void in_recv_handler(DictionaryIterator *iterator, void *context)
-{
-  // Get Tuple
-  Tuple *t = dict_read_first(iterator);
-  if(t)
-  {
-    switch(t->key)
-    {
-    case KEY_LYRICS:
-      // It's the KEY_LYRICS key
-      if(strcmp(t->value->cstring, "on") == 0)
-      {
-        // Set and save with lyrics on
-        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
-        layer_set_hidden(text_layer_get_layer(s_lyrics_layer), false);
-        persist_write_bool(KEY_LYRICS, true);
-      }
-      else if(strcmp(t->value->cstring, "off") == 0)
-      {
-        // Set and save with lyrics off
-        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);    // change back to s_background_bitmap_dithered?
-        layer_set_hidden(text_layer_get_layer(s_lyrics_layer), true);
-        persist_write_bool(KEY_LYRICS, false);
-      }
-      break;
-    }
-  }
-}
-
 static void init()
 {
+	load_settings();
+	
     s_main_window = window_create();
     
     window_set_window_handlers(s_main_window, (WindowHandlers) 
