@@ -88,7 +88,7 @@ static void update_display()
         layer_set_hidden(text_layer_get_layer(s_lyrics_layer), false);
     }
     else {  // Hide lyrics
-        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap); // change back to s_background_bitmap_dithered?
+        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap_dithered); // change back to s_background_bitmap_dithered?
         layer_set_hidden(text_layer_get_layer(s_lyrics_layer), true);
     }
 	

@@ -5,7 +5,7 @@ module.exports = [
 	},
   	{
     	"type": "text",
-    	"defaultValue": "Toggle these settings to change the watchface."
+    	"defaultValue": "Toggle the buttons to change settings."
   	},
 	{
         "type": "toggle",

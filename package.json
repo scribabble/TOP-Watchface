@@ -22,6 +22,12 @@
         "resources": {
             "media": [
                 {
+                    "file": "images/Thin_Twenty_One_Pilots_logo.png",
+                    "name": "THIN_TOP_LOGO",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/Twenty_One_Pilots_menu_image.png",
                     "menuIcon": true,
                     "name": "Twenty_One_Pilots_menu_image",
