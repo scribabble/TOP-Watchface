@@ -12,7 +12,11 @@
         "displayName": "Twenty One Pilots",
         "enableMultiJS": true,
         "messageKeys": [
-            "Lyrics"
+            "Lyrics",
+            "TimeColor",
+            "DateColor",
+            "DayOfWeekColor",
+            "LyricsColor"
         ],
         "projectType": "native",
         "resources": {
@@ -44,7 +48,7 @@
             "basalt",
             "chalk"
         ],
-        "uuid": "333a93fa-dc4b-468b-9947-25436b861db9",
+        "uuid": "8a81f2e7-be6d-436b-aa48-0ac9c72211c0",
         "watchapp": {
             "watchface": false
         }

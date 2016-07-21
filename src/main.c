@@ -2,7 +2,8 @@
 #include "main.h"
 #include "lyrics.h"
 
-ClaySettings settings;
+ClaySettings userSettings;
+PlatformSettings platformSettings;
 
 static Window *s_main_window;
 
@@ -20,34 +21,26 @@ int dayOfYear = 0;		// needed to choose lyrics
 // Initialize the default settings
 static void default_settings()
 {
-	settings.Lyrics = false;
+	userSettings.Lyrics = false;
+	
+	userSettings.TimeColor = GColorWhite;
+	userSettings.DateColor = GColorBlack;
+	userSettings.DayOfWeekColor = GColorBlack;
+	userSettings.LyricsColor = GColorBlack;
 }
 
 // Read settings from persistent storage
 static void load_settings()
 {
 	default_settings();
-	persist_read_data(SETTINGS_KEY, &settings, sizeof(settings));
+	persist_read_data(SETTINGS_KEY, &userSettings, sizeof(userSettings));
 }
 
 // Save settings to persistent storage
 static void save_settings()
 {
-	persist_write_data(SETTINGS_KEY, &settings, sizeof(settings));
+	persist_write_data(SETTINGS_KEY, &userSettings, sizeof(userSettings));
 	update_display();
-}
-
-// Update the display elements
-static void update_display()
-{
-	if (settings.Lyrics) {  // Show lyrics
-        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
-        layer_set_hidden(text_layer_get_layer(s_lyrics_layer), false);
-    }
-    else {  // Hide lyrics
-        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap); // change back to s_background_bitmap_dithered?
-        layer_set_hidden(text_layer_get_layer(s_lyrics_layer), true);
-    }
 }
 
 static void in_recv_handler(DictionaryIterator *iterator, void *context)
@@ -56,11 +49,63 @@ static void in_recv_handler(DictionaryIterator *iterator, void *context)
   	Tuple *lyrics_t = dict_find(iterator, MESSAGE_KEY_Lyrics);
 	if (lyrics_t)
 	{
-		settings.Lyrics = lyrics_t->value->int32 == 1;	
+		userSettings.Lyrics = lyrics_t->value->int32 == 1;	
+	}
+	
+	Tuple *timeColor_t = dict_find(iterator, MESSAGE_KEY_TimeColor);
+	if (timeColor_t)
+	{
+		userSettings.TimeColor = GColorFromHEX(timeColor_t->value->int32);
+	}
+	
+	Tuple *dateColor_t = dict_find(iterator, MESSAGE_KEY_DateColor);
+	if (dateColor_t)
+	{
+		userSettings.DateColor = GColorFromHEX(dateColor_t->value->int32);
+	}
+	
+	Tuple *dayOfWeekColor_t = dict_find(iterator, MESSAGE_KEY_DayOfWeekColor);
+	if (dayOfWeekColor_t)
+	{
+		userSettings.DayOfWeekColor = GColorFromHEX(dayOfWeekColor_t->value->int32);
+	}
+	
+	Tuple *lyricsColor_t = dict_find(iterator, MESSAGE_KEY_LyricsColor);
+	if (lyricsColor_t)
+	{
+		userSettings.LyricsColor = GColorFromHEX(lyricsColor_t->value->int32);
 	}
 	
 	// Save the new settings to persistent storage
 	save_settings();
+}
+
+// Update the display elements
+static void update_display()
+{
+	if (userSettings.Lyrics) {  // Show lyrics
+        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
+        layer_set_hidden(text_layer_get_layer(s_lyrics_layer), false);
+    }
+    else {  // Hide lyrics
+        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap); // change back to s_background_bitmap_dithered?
+        layer_set_hidden(text_layer_get_layer(s_lyrics_layer), true);
+    }
+	
+	// Set color of text layers
+    text_layer_set_text_color(s_time_layer, userSettings.TimeColor);
+    text_layer_set_text_color(s_date_layer, userSettings.DateColor);
+    text_layer_set_text_color(s_dayOfWeek_layer, userSettings.DayOfWeekColor);
+    text_layer_set_text_color(s_lyrics_layer, userSettings.LyricsColor);
+}
+
+static void set_platform_settings(Layer *window_layer)
+{
+	platformSettings.grect_background_layer = PBL_IF_RECT_ELSE(GRect(0, 0, 144, 168),GRect(0, 7, 144, 168));
+	platformSettings.grect_time_layer = PBL_IF_RECT_ELSE(GRect(15, 63, 97, 50),GRect(15, 70, 97, 50));
+	platformSettings.grect_date_layer = PBL_IF_RECT_ELSE(GRect(74,147,67,50),GRect(115,91,67,50));
+	platformSettings.grect_dayOfWeek_layer = PBL_IF_RECT_ELSE(GRect(74,132,67,50),GRect(115,76,67,50));
+	platformSettings.grect_lyrics_layer = PBL_IF_RECT_ELSE(GRect(10,5,124,60),layer_get_bounds(window_layer));
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) 
@@ -116,49 +161,39 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed)
 
 static void main_window_load (Window *window)
 {
-	// TODO: REMOVE THIS
-	bool lyrics = true;
+	Layer *window_layer = window_get_root_layer(window);
+	
+	set_platform_settings(window_layer);
 	
     s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_TOP_LOGO);
     s_background_bitmap_dithered = gbitmap_create_with_resource(RESOURCE_ID_TOP_LOGO_DITHER);
-    s_background_layer = PBL_IF_RECT_ELSE(bitmap_layer_create(GRect(0, 0, 144, 168)),bitmap_layer_create(GRect(0, 7, 144, 168)));
-    layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_background_layer));
+    s_background_layer = bitmap_layer_create(platformSettings.grect_background_layer);
+    layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
     
-    s_time_layer = PBL_IF_RECT_ELSE(text_layer_create(GRect(15, 63, 97, 50)),text_layer_create(GRect(15, 70, 97, 50)));
+    s_time_layer = text_layer_create(platformSettings.grect_time_layer);
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentLeft);
     text_layer_set_background_color(s_time_layer, GColorClear);
-    text_layer_set_text_color(s_time_layer, GColorWhite);
     text_layer_set_font(s_time_layer,fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS));
-    layer_add_child(window_get_root_layer(window),text_layer_get_layer(s_time_layer));
+    layer_add_child(window_layer,text_layer_get_layer(s_time_layer));
     
-    s_date_layer = PBL_IF_RECT_ELSE(text_layer_create(GRect(74,150,67,50)),text_layer_create(GRect(114,89,67,50)));
+    s_date_layer = text_layer_create(platformSettings.grect_date_layer);
     text_layer_set_text_alignment(s_date_layer, PBL_IF_RECT_ELSE(GTextAlignmentRight,GTextAlignmentLeft));
     text_layer_set_background_color(s_date_layer, GColorClear);
-    text_layer_set_text_color(s_date_layer, GColorBlack);
-    text_layer_set_font(s_date_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
-    layer_add_child(window_get_root_layer(window),text_layer_get_layer(s_date_layer));
+    text_layer_set_font(s_date_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    layer_add_child(window_layer,text_layer_get_layer(s_date_layer));
     
-    s_dayOfWeek_layer = PBL_IF_RECT_ELSE(text_layer_create(GRect(74,137,67,50)),text_layer_create(GRect(115,76,67,50)));
+    s_dayOfWeek_layer = text_layer_create(platformSettings.grect_dayOfWeek_layer);
     text_layer_set_text_alignment(s_dayOfWeek_layer, PBL_IF_RECT_ELSE(GTextAlignmentRight,GTextAlignmentLeft));
     text_layer_set_background_color(s_dayOfWeek_layer, GColorClear);
-    text_layer_set_text_color(s_dayOfWeek_layer, GColorBlack);
-    text_layer_set_font(s_dayOfWeek_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
-    layer_add_child(window_get_root_layer(window),text_layer_get_layer(s_dayOfWeek_layer));
+    text_layer_set_font(s_dayOfWeek_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    layer_add_child(window_layer,text_layer_get_layer(s_dayOfWeek_layer));
 
-    s_lyrics_layer = PBL_IF_RECT_ELSE(text_layer_create(GRect(10,5,124,60)),text_layer_create(layer_get_bounds(window_get_root_layer(s_main_window))));
+    s_lyrics_layer = text_layer_create(platformSettings.grect_lyrics_layer);
     text_layer_set_font(s_lyrics_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
     text_layer_set_background_color(s_lyrics_layer, GColorClear);
     text_layer_set_text_alignment(s_lyrics_layer, GTextAlignmentCenter);
-    layer_add_child(window_get_root_layer(window),text_layer_get_layer(s_lyrics_layer));
+    layer_add_child(window_layer,text_layer_get_layer(s_lyrics_layer));
     text_layer_enable_screen_text_flow_and_paging(s_lyrics_layer, 1);
-    /*if (lyrics) {  // Show lyrics
-        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
-        layer_set_hidden(text_layer_get_layer(s_lyrics_layer), false);
-    }
-    else {  // Hide lyrics
-        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap); // change back to s_background_bitmap_dithered?
-        layer_set_hidden(text_layer_get_layer(s_lyrics_layer), true);
-    }*/
         
     // Load time when window is loaded
     time_t now = time(NULL); 
