@@ -2,7 +2,7 @@
 
 void chooseLyrics(TextLayer *s_lyrics_layer, int dayOfYear)
 {
-	dayOfYear = dayOfYear % PBL_IF_COLOR_ELSE(31,24);    // <--number based on number of lyrics in system    (the last case + 1)
+	dayOfYear = dayOfYear % 31;    // <--number based on number of lyrics in system    (the last case + 1)
 	
     switch (dayOfYear)
     {

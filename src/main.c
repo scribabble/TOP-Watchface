@@ -227,7 +227,7 @@ static void init()
     });
     
     app_message_register_inbox_received((AppMessageInboxReceived) in_recv_handler);
-    app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+    app_message_open(128, 128);
     
     window_stack_push(s_main_window, true);
     
