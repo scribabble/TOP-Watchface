@@ -4,6 +4,7 @@
 #define SETTINGS_KEY 1
 
 typedef struct ClaySettings {
+	bool ThinLogo;
 	bool Lyrics;
 	
 	GColor TimeColor;

@@ -16,33 +16,34 @@
             "TimeColor",
             "DateColor",
             "DayOfWeekColor",
-            "LyricsColor"
+            "LyricsColor",
+            "ThinLogo"
         ],
         "projectType": "native",
         "resources": {
             "media": [
                 {
-                    "file": "images/Thin_Twenty_One_Pilots_logo.png",
-                    "name": "THIN_TOP_LOGO",
-                    "targetPlatforms": null,
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/Twenty_One_Pilots_menu_image.png",
+                    "file": "images/TOP_menu_image.png",
                     "menuIcon": true,
                     "name": "Twenty_One_Pilots_menu_image",
                     "targetPlatforms": null,
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/Twenty_One_Pilots_logo.png",
-                    "name": "TOP_LOGO",
+                    "file": "images/TOP_Dither_logo.png",
+                    "name": "TOP_LOGO_DITHER",
                     "targetPlatforms": null,
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/TOP_BW_Dither.png",
-                    "name": "TOP_LOGO_DITHER",
+                    "file": "images/Thin_TOP_logo.png",
+                    "name": "THIN_TOP_LOGO",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/TOP_logo.png",
+                    "name": "TOP_LOGO",
                     "targetPlatforms": null,
                     "type": "bitmap"
                 }
@@ -54,7 +55,7 @@
             "basalt",
             "chalk"
         ],
-        "uuid": "8a81f2e7-be6d-436b-aa48-0ac9c72211c0",
+        "uuid": "4797c01e-96ad-4890-af2a-968c8a16f44d",
         "watchapp": {
             "watchface": false
         }

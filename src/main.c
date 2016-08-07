@@ -10,6 +10,7 @@ static Window *s_main_window;
 static BitmapLayer *s_background_layer;
 static GBitmap *s_background_bitmap;
 static GBitmap *s_background_bitmap_dithered;
+static GBitmap *s_background_bitmap_thin;
 
 static TextLayer *s_time_layer;
 static TextLayer *s_date_layer;
@@ -21,6 +22,7 @@ int dayOfYear = 0;		// needed to choose lyrics
 // Initialize the default settings
 static void default_settings()
 {
+	userSettings.ThinLogo = false;
 	userSettings.Lyrics = false;
 	
 	userSettings.TimeColor = GColorWhite;
@@ -45,7 +47,12 @@ static void save_settings()
 
 static void in_recv_handler(DictionaryIterator *iterator, void *context)
 {
-  	// Get Tuple
+  	Tuple *thinLogo_t = dict_find(iterator, MESSAGE_KEY_ThinLogo);
+	if (thinLogo_t)
+	{
+		userSettings.ThinLogo = thinLogo_t->value->int32 == 1;
+	}
+	
   	Tuple *lyrics_t = dict_find(iterator, MESSAGE_KEY_Lyrics);
 	if (lyrics_t)
 	{
@@ -83,14 +90,27 @@ static void in_recv_handler(DictionaryIterator *iterator, void *context)
 // Update the display elements
 static void update_display()
 {
-	if (userSettings.Lyrics) {  // Show lyrics
-        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
-        layer_set_hidden(text_layer_get_layer(s_lyrics_layer), false);
-    }
-    else {  // Hide lyrics
-        bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap_dithered); // change back to s_background_bitmap_dithered?
-        layer_set_hidden(text_layer_get_layer(s_lyrics_layer), true);
-    }
+	// Toggle new/old logo
+	if (userSettings.ThinLogo && userSettings.Lyrics)
+	{
+		bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap_thin);
+		layer_set_hidden(text_layer_get_layer(s_lyrics_layer),false);
+	}
+	else if (userSettings.ThinLogo && !userSettings.Lyrics)
+	{
+		bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap_thin);
+		layer_set_hidden(text_layer_get_layer(s_lyrics_layer),true);
+	}
+	else if (!userSettings.ThinLogo && userSettings.Lyrics)
+	{
+		bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
+		layer_set_hidden(text_layer_get_layer(s_lyrics_layer),false);
+	}
+	else
+	{
+		bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap_dithered);
+		layer_set_hidden(text_layer_get_layer(s_lyrics_layer),true);
+	}
 	
 	// Set color of text layers
     text_layer_set_text_color(s_time_layer, userSettings.TimeColor);
@@ -101,11 +121,21 @@ static void update_display()
 
 static void set_platform_settings(Layer *window_layer)
 {
-	platformSettings.grect_background_layer = PBL_IF_RECT_ELSE(GRect(0, 0, 144, 168),GRect(0, 7, 144, 168));
-	platformSettings.grect_time_layer = PBL_IF_RECT_ELSE(GRect(15, 63, 97, 50),GRect(15, 70, 97, 50));
-	platformSettings.grect_date_layer = PBL_IF_RECT_ELSE(GRect(74,147,67,50),GRect(115,91,67,50));
-	platformSettings.grect_dayOfWeek_layer = PBL_IF_RECT_ELSE(GRect(74,132,67,50),GRect(115,76,67,50));
+	platformSettings.grect_background_layer = PBL_IF_RECT_ELSE(GRect(0, 0, 144, 168),GRect(0, 0, 180, 180));
 	platformSettings.grect_lyrics_layer = PBL_IF_RECT_ELSE(GRect(10,5,124,60),layer_get_bounds(window_layer));
+	
+	if (userSettings.ThinLogo)
+	{
+		platformSettings.grect_time_layer = PBL_IF_RECT_ELSE(GRect(15, 63, 97, 50),GRect(15, 70, 97, 50));
+		platformSettings.grect_date_layer = PBL_IF_RECT_ELSE(GRect(74,147,67,50),GRect(115,91,67,50));
+		platformSettings.grect_dayOfWeek_layer = PBL_IF_RECT_ELSE(GRect(74,132,67,50),GRect(115,76,67,50));
+	}
+	else
+	{
+		platformSettings.grect_time_layer = PBL_IF_RECT_ELSE(GRect(15, 63, 97, 50),GRect(15, 70, 97, 50));
+		platformSettings.grect_date_layer = PBL_IF_RECT_ELSE(GRect(74,147,67,50),GRect(115,91,67,50));
+		platformSettings.grect_dayOfWeek_layer = PBL_IF_RECT_ELSE(GRect(74,132,67,50),GRect(115,76,67,50));
+	}
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) 
@@ -163,10 +193,12 @@ static void main_window_load (Window *window)
 {
 	Layer *window_layer = window_get_root_layer(window);
 	
+	// Determine configuration based on Aplite, Basalt, Chalk, ...
 	set_platform_settings(window_layer);
 	
     s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_TOP_LOGO);
     s_background_bitmap_dithered = gbitmap_create_with_resource(RESOURCE_ID_TOP_LOGO_DITHER);
+	s_background_bitmap_thin = gbitmap_create_with_resource(RESOURCE_ID_THIN_TOP_LOGO);
     s_background_layer = bitmap_layer_create(platformSettings.grect_background_layer);
     layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
     
@@ -206,6 +238,7 @@ static void main_window_unload (Window *window)
 {
     gbitmap_destroy(s_background_bitmap);
     gbitmap_destroy(s_background_bitmap_dithered);
+	gbitmap_destroy(s_background_bitmap_thin);
     bitmap_layer_destroy(s_background_layer);
     
     text_layer_destroy (s_time_layer);
@@ -227,7 +260,7 @@ static void init()
     });
     
     app_message_register_inbox_received((AppMessageInboxReceived) in_recv_handler);
-    app_message_open(128, 128);
+    app_message_open(64, 64);
     
     window_stack_push(s_main_window, true);
     

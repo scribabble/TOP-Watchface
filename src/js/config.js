@@ -9,6 +9,12 @@ module.exports = [
   	},
 	{
         "type": "toggle",
+        "messageKey": "ThinLogo",
+        "label": "Enable new TØP logo",
+        "defaultValue": false
+	},
+	{
+        "type": "toggle",
         "messageKey": "Lyrics",
         "label": "Enable Lyrics",
         "defaultValue": false
