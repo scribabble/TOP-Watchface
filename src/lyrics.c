@@ -2,7 +2,7 @@
 
 void chooseLyrics(TextLayer *s_lyrics_layer, int dayOfYear)
 {
-	dayOfYear = dayOfYear % 31;    // <--number based on number of lyrics in system    (the last case + 1)
+	dayOfYear = dayOfYear % 32;    // <--number based on number of lyrics in system    (the last case + 1)
 	
     switch (dayOfYear)
     {
@@ -98,6 +98,9 @@ void chooseLyrics(TextLayer *s_lyrics_layer, int dayOfYear)
             break;
         case 30:
             text_layer_set_text(s_lyrics_layer, "You would do almost anything just to feel free");
+            break;
+		case 31:
+            text_layer_set_text(s_lyrics_layer, "All my friends are heathens, take it slow");
             break;
     }
 }

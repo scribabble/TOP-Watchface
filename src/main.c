@@ -90,6 +90,36 @@ static void in_recv_handler(DictionaryIterator *iterator, void *context)
 // Update the display elements
 static void update_display()
 {
+	// Update platform settings
+	platformSettings.grect_background_layer = PBL_IF_RECT_ELSE(GRect(0, 0, 144, 168),GRect(0, 0, 180, 180));
+	
+	if (userSettings.ThinLogo)
+	{	
+		platformSettings.grect_time_layer = PBL_IF_RECT_ELSE(GRect(24, 108, 97, 50),GRect(42, 125, 97, 50));
+		platformSettings.grect_date_layer = PBL_IF_RECT_ELSE(GRect(74,147,67,50),GRect(73,111,67,50));
+		platformSettings.grect_dayOfWeek_layer = PBL_IF_RECT_ELSE(GRect(74,132,67,50),GRect(73,96,67,50));
+	}
+	else
+	{
+		platformSettings.grect_time_layer = PBL_IF_RECT_ELSE(GRect(12, 63, 97, 50),GRect(12, 70, 97, 50));
+		platformSettings.grect_date_layer = PBL_IF_RECT_ELSE(GRect(74,147,67,50),GRect(115,91,67,50));
+		platformSettings.grect_dayOfWeek_layer = PBL_IF_RECT_ELSE(GRect(74,132,67,50),GRect(115,76,67,50));
+	}
+	
+	layer_set_frame(bitmap_layer_get_layer(s_background_layer), platformSettings.grect_background_layer);
+	layer_mark_dirty(bitmap_layer_get_layer(s_background_layer));
+	
+	layer_set_frame(text_layer_get_layer(s_time_layer), platformSettings.grect_time_layer);
+	layer_mark_dirty(text_layer_get_layer(s_time_layer));
+	
+	layer_set_frame(text_layer_get_layer(s_date_layer), platformSettings.grect_date_layer);
+	layer_mark_dirty(text_layer_get_layer(s_date_layer));
+	
+	layer_set_frame(text_layer_get_layer(s_dayOfWeek_layer), platformSettings.grect_dayOfWeek_layer);
+	layer_mark_dirty(text_layer_get_layer(s_dayOfWeek_layer));
+	
+	
+	
 	// Toggle new/old logo
 	if (userSettings.ThinLogo && userSettings.Lyrics)
 	{
@@ -117,25 +147,6 @@ static void update_display()
     text_layer_set_text_color(s_date_layer, userSettings.DateColor);
     text_layer_set_text_color(s_dayOfWeek_layer, userSettings.DayOfWeekColor);
     text_layer_set_text_color(s_lyrics_layer, userSettings.LyricsColor);
-}
-
-static void set_platform_settings(Layer *window_layer)
-{
-	platformSettings.grect_background_layer = PBL_IF_RECT_ELSE(GRect(0, 0, 144, 168),GRect(0, 0, 180, 180));
-	platformSettings.grect_lyrics_layer = PBL_IF_RECT_ELSE(GRect(10,5,124,60),layer_get_bounds(window_layer));
-	
-	if (userSettings.ThinLogo)
-	{
-		platformSettings.grect_time_layer = PBL_IF_RECT_ELSE(GRect(15, 63, 97, 50),GRect(15, 70, 97, 50));
-		platformSettings.grect_date_layer = PBL_IF_RECT_ELSE(GRect(74,147,67,50),GRect(115,91,67,50));
-		platformSettings.grect_dayOfWeek_layer = PBL_IF_RECT_ELSE(GRect(74,132,67,50),GRect(115,76,67,50));
-	}
-	else
-	{
-		platformSettings.grect_time_layer = PBL_IF_RECT_ELSE(GRect(15, 63, 97, 50),GRect(15, 70, 97, 50));
-		platformSettings.grect_date_layer = PBL_IF_RECT_ELSE(GRect(74,147,67,50),GRect(115,91,67,50));
-		platformSettings.grect_dayOfWeek_layer = PBL_IF_RECT_ELSE(GRect(74,132,67,50),GRect(115,76,67,50));
-	}
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) 
@@ -193,8 +204,8 @@ static void main_window_load (Window *window)
 {
 	Layer *window_layer = window_get_root_layer(window);
 	
-	// Determine configuration based on Aplite, Basalt, Chalk, ...
-	set_platform_settings(window_layer);
+	// Set the lyrics layer setting...
+	platformSettings.grect_lyrics_layer = PBL_IF_RECT_ELSE(GRect(10,5,124,60),layer_get_bounds(window_layer));
 	
     s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_TOP_LOGO);
     s_background_bitmap_dithered = gbitmap_create_with_resource(RESOURCE_ID_TOP_LOGO_DITHER);
@@ -203,7 +214,7 @@ static void main_window_load (Window *window)
     layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
     
     s_time_layer = text_layer_create(platformSettings.grect_time_layer);
-    text_layer_set_text_alignment(s_time_layer, GTextAlignmentLeft);
+    text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
     text_layer_set_background_color(s_time_layer, GColorClear);
     text_layer_set_font(s_time_layer,fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS));
     layer_add_child(window_layer,text_layer_get_layer(s_time_layer));
