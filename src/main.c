@@ -205,7 +205,7 @@ static void main_window_load (Window *window)
 	Layer *window_layer = window_get_root_layer(window);
 	
 	// Set the lyrics layer setting...
-	platformSettings.grect_lyrics_layer = PBL_IF_RECT_ELSE(GRect(10,5,124,60),layer_get_bounds(window_layer));
+	platformSettings.grect_lyrics_layer = PBL_IF_RECT_ELSE(GRect(0,0,144,65),layer_get_bounds(window_layer));
 	
     s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_TOP_LOGO);
     s_background_bitmap_dithered = gbitmap_create_with_resource(RESOURCE_ID_TOP_LOGO_DITHER);
